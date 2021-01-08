@@ -13,6 +13,10 @@ def get_args():
     parser.add_argument('--model', type=str, default="gpt3_small")
     parser.add_argument('--local_rank', type=int, default=-1,
                         help='local rank passed from distributed launcher')
+    parser.add_argument('--deepspeed_transformer_kernel',
+                     default=False, action='store_true',
+                     help='Use DeepSpeed transformer kernel to accelerate.')
+
     parser = deepspeed.add_config_arguments(parser)
     args = parser.parse_args()
     return args
