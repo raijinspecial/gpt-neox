@@ -9,7 +9,7 @@ from gpt_neox import (GPTNeoX, AutoregressiveWrapper, GPT2Dataset, extract_tarfi
                       prepare_optimizer_parameters, get_tokenizer, is_main)
 
 from gpt_neox.utils import get_args, get_params
-from gpt_neox.datasets import get_hub_dataset
+from gpt_neox.hub_dataloader import get_hub_dataset
 # from gpt_neox.datasets import DynamicDataset
 
 train_args = get_args()
@@ -22,7 +22,7 @@ tokenizer = get_tokenizer(tokenizer_type=params["tokenizer"].get("type", None),
 vocab_size = len(tokenizer) if params["vocab_size"] is None else params["vocab_size"]
 
 # instantiate GPT-like decoder model
-params["seq_len"] = 1024
+params["seq_len"] = 2049
 model = GPTNeoX(
     num_tokens=vocab_size,
     dim=params["hidden_dim"],
@@ -95,22 +95,23 @@ for _ in pbar:
 
         pbar.set_description(f'Training Loss: {loss.item():.4f}')
         pbar.update()
+'''
+        if params.get("validate_every") is not None:
+            if is_main and i % params["validate_every"] == 0:
+                model_engine.eval()
+                with torch.no_grad():
+                    val_data = next(val_loader).cuda()
+                    loss = model_engine(val_data)
+                    pbar.write(f'Validation Loss: {loss.item()}')
 
-#         if params.get("validate_every") is not None:
-#             if is_main and i % params["validate_every"] == 0:
-#                 model_engine.eval()
-#                 with torch.no_grad():
-#                     val_data = next(val_loader).cuda()
-#                     loss = model_engine(val_data)
-#                     pbar.write(f'Validation Loss: {loss.item()}')
-
-#         if params.get("generate_every") is not None:
-#             if is_main and i % params["generate_every"] == 0:
-#                 model.eval()
-#                 val_data = next(val_loader).cuda()
-#                 inp = random.choice(val_data)[:-1]
-#                 prime = tokenizer.decode(inp)
-#                 pbar.write(f"{prime} \n\n {'*' * 100}")
-#                 sample = model.generate(inp.cuda(), params["generate_length"])
-#                 output_str = tokenizer.decode(sample)
-#                 pbar.write(output_str)
+        if params.get("generate_every") is not None:
+            if is_main and i % params["generate_every"] == 0:
+                model.eval()
+                val_data = next(val_loader).cuda()
+                inp = random.choice(val_data)[:-1]
+                prime = tokenizer.decode(inp)
+                pbar.write(f"{prime} \n\n {'*' * 100}")
+                sample = model.generate(inp.cuda(), params["generate_length"])
+                output_str = tokenizer.decode(sample)
+                pbar.write(output_str)
+'''
